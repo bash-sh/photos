@@ -64,9 +64,13 @@ func (lib *Library) Validate() {
 }
 
 // getDateCreated of photo or video
-func getDateCreated(f *os.File) (DateTime time.Time) {
+func getDateCreated(path string) (DateTime time.Time) {
+	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
 	var extension string = strings.ToLower(filepath.Ext(f.Name()))
-	var err error
 	if extension == ".jpg" || extension == ".heic" {
 		var x xmp.XMP
 		var e *exif.Data
@@ -134,17 +138,12 @@ func (lib *Library) Process() {
 		}
 		if !info.IsDir() {
 			log.Printf("Original File Path: %s\n", oldPath)
-			f, err := os.Open(oldPath)
+			var dateCreated time.Time = getDateCreated(oldPath)
+			f, err := os.OpenFile(oldPath, os.O_RDONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer func() {
-				err = f.Close()
-				if err != nil {
-					log.Fatal(err)
-				}
-			}()
-			var dateCreated time.Time = getDateCreated(f)
+			defer f.Close()
 			var newPath string = lib.OutPath + string(os.PathSeparator) + dateCreated.Format("2006") + "-" + lib.Topic + string(os.PathSeparator) + dateCreated.Format("2006_01_02-Monday")
 			var newFile string = lib.Topic + "_" + dateCreated.Format("20060102_150405") + strings.ToLower(filepath.Ext(f.Name()))
 			log.Printf("New File Path: %s\n", newPath+string(os.PathSeparator)+newFile)
@@ -153,13 +152,11 @@ func (lib *Library) Process() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer func() {
-				err = n.Close()
-				if err != nil {
-					log.Fatal(err)
-				}
-			}()
-			io.Copy(n, f)
+			defer n.Close()
+			_, err = io.Copy(n, f)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 		return nil
 	})
