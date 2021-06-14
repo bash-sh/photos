@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -20,23 +19,47 @@ func main() {
 		Version: "0.1.0",
 		Usage:   "organize a photo library",
 		Action: func(c *cli.Context) error {
-			fmt.Println("Please select a command or refer to the help")
+			log.Fatal("Please select a command or refer to the help")
 			return nil
 		},
 		Commands: []*cli.Command{
 			{
 				Name:    "organize",
-				Aliases: []string{"o"},
+				Aliases: []string{"org"},
 				Usage:   "organizes a library",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "InPath",
+						Aliases: []string{"in"},
+						Usage:   "source photos from `PATH`",
+					},
+					&cli.StringFlag{
+						Name:    "OutPath",
+						Aliases: []string{"out"},
+						Usage:   "export photos to `PATH`",
+					},
+					&cli.StringFlag{
+						Name:    "Topic",
+						Aliases: []string{"top"},
+						Usage:   "`TOPIC` of the processed photos (e.g., location, event)",
+					},
+				},
 				Action: func(c *cli.Context) error {
 					lib := new(org.Library)
-					lib.Init()
+					if c.NumFlags() == 6 {
+						lib.InPath = c.String("InPath")
+						lib.OutPath = c.String("OutPath")
+						lib.Topic = c.String("Topic")
+					} else {
+						lib.Init()
+					}
+					lib.Validate()
+					lib.Process()
 					return nil
 				},
 			},
 		},
 	}
-
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
