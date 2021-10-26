@@ -27,19 +27,20 @@ type Library struct {
 
 // Init variables
 func (lib *Library) Init() {
+	var line []byte
 	log.Println("Initializing variables")
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Source photos from PATH: ")
-	lib.InPath, _ = reader.ReadString('\n')
-	lib.InPath = strings.TrimSuffix(lib.InPath, "\n")
+	fmt.Println("Source photos from PATH:")
+	line, _, _ = reader.ReadLine()
+	lib.InPath = string(line)
 	lib.InPath = strings.TrimSuffix(lib.InPath, string(os.PathSeparator))
-	fmt.Print("Export photos to PATH: ")
-	lib.OutPath, _ = reader.ReadString('\n')
-	lib.OutPath = strings.TrimSuffix(lib.OutPath, "\n")
+	fmt.Println("Export photos to PATH: ")
+	line, _, _ = reader.ReadLine()
+	lib.OutPath = string(line)
 	lib.OutPath = strings.TrimSuffix(lib.OutPath, string(os.PathSeparator))
-	fmt.Print("Topic of the processed photos (e.g., location, event): ")
-	lib.Topic, _ = reader.ReadString('\n')
-	lib.Topic = strings.TrimSuffix(lib.Topic, "\n")
+	fmt.Println("Topic of the processed photos (e.g., location, event): ")
+	line, _, _ = reader.ReadLine()
+	lib.Topic = string(line)
 	log.Println("Variables initialized")
 }
 
