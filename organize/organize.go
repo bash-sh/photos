@@ -1,7 +1,6 @@
 package organize
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -27,20 +26,15 @@ type Library struct {
 
 // Init variables
 func (lib *Library) Init() {
-	var line []byte
 	log.Println("Initializing variables")
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Source photos from PATH:")
-	line, _, _ = reader.ReadLine()
-	lib.InPath = string(line)
+	fmt.Scan(&lib.InPath)
 	lib.InPath = strings.TrimSuffix(lib.InPath, string(os.PathSeparator))
-	fmt.Println("Export photos to PATH: ")
-	line, _, _ = reader.ReadLine()
-	lib.OutPath = string(line)
+	fmt.Println("Export photos to PATH:")
+	fmt.Scan(&lib.OutPath)
 	lib.OutPath = strings.TrimSuffix(lib.OutPath, string(os.PathSeparator))
-	fmt.Println("Topic of the processed photos (e.g., location, event): ")
-	line, _, _ = reader.ReadLine()
-	lib.Topic = string(line)
+	fmt.Println("Topic of the processed photos (e.g., location, event):")
+	fmt.Scan(&lib.Topic)
 	log.Println("Variables initialized")
 }
 
@@ -61,14 +55,14 @@ func (lib *Library) Validate() {
 	if strings.IndexFunc(lib.Topic, f) != -1 {
 		log.Fatalf("Topic should only contain ASCII characters: %s", lib.Topic)
 	}
-	log.Println("Successfully validated library")
+	log.Println("Library validated")
 }
 
 // getDateCreated of photo or video
 func getDateCreated(path string) (DateTime time.Time) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer f.Close()
 	var extension string = strings.ToLower(filepath.Ext(f.Name()))
@@ -85,7 +79,7 @@ func getDateCreated(path string) (DateTime time.Time) {
 		}
 		_, err := imagemeta.NewMetadata(f, xmpDecodeFn, exifDecodeFn)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		DateTime, _ = e.DateTime()
 	}
@@ -96,7 +90,7 @@ func getDateCreated(path string) (DateTime time.Time) {
 		for {
 			_, err := f.Read(buf[:])
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			if bytes.Equal(buf[4:8], []byte("moov")) {
 				break
@@ -107,24 +101,24 @@ func getDateCreated(path string) (DateTime time.Time) {
 		}
 		_, err = f.Read(buf[:])
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		s := string(buf[4:8])
 		switch s {
 		case "mvhd":
 			if _, err := f.Seek(4, 1); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			_, err = f.Read(buf[:4])
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			i = int64(binary.BigEndian.Uint32(buf[:4]))
 			DateTime = time.Unix(i-epochAdjust, 0).Local()
 		case "cmov":
-			log.Fatal("moov atom is compressed")
+			log.Println("moov atom is compressed")
 		default:
-			log.Fatal("expected to find 'mvhd' header, didn't")
+			log.Println("expected to find 'mvhd' header, didn't")
 		}
 	}
 	return
@@ -135,14 +129,14 @@ func (lib *Library) Process() {
 	log.Println("Processing library")
 	filepath.WalkDir(lib.InPath, func(oldPath string, info os.DirEntry, err error) error {
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Println(err.Error())
 		}
 		if !info.IsDir() {
 			log.Printf("Original File Path: %s\n", oldPath)
 			var dateCreated time.Time = getDateCreated(oldPath)
 			f, err := os.OpenFile(oldPath, os.O_RDONLY, 0644)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			defer f.Close()
 			var newPath string = lib.OutPath + string(os.PathSeparator) + dateCreated.Format("2006") + "-" + lib.Topic + string(os.PathSeparator) + dateCreated.Format("2006_01_02-Monday")
@@ -151,14 +145,15 @@ func (lib *Library) Process() {
 			os.MkdirAll(newPath, 0750)
 			n, err := os.Create(newPath + string(os.PathSeparator) + newFile)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			defer n.Close()
 			_, err = io.Copy(n, f)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}
 		return nil
 	})
+	log.Println("Library processed")
 }
