@@ -12,9 +12,6 @@ import (
 	"time"
 
 	"github.com/evanoberholster/imagemeta"
-	"github.com/evanoberholster/imagemeta/exif"
-	"github.com/evanoberholster/imagemeta/meta"
-	"github.com/evanoberholster/imagemeta/xmp"
 )
 
 // Library object
@@ -67,21 +64,11 @@ func getDateCreated(path string) (DateTime time.Time) {
 	defer f.Close()
 	var extension string = strings.ToLower(filepath.Ext(f.Name()))
 	if extension == ".jpg" || extension == ".heic" {
-		var x xmp.XMP
-		var e *exif.Data
-		exifDecodeFn := func(r io.Reader, m *meta.Metadata) error {
-			e, err = e.ParseExifWithMetadata(f, m)
-			return nil
+		m, _ := imagemeta.Parse(f)
+		e, _ := m.Exif()
+		if e != nil {
+			DateTime, _ = e.DateTime(time.Local)
 		}
-		xmpDecodeFn := func(r io.Reader, m *meta.Metadata) error {
-			x, err = xmp.ParseXmp(r)
-			return err
-		}
-		_, err := imagemeta.NewMetadata(f, xmpDecodeFn, exifDecodeFn)
-		if err != nil {
-			log.Println(err)
-		}
-		DateTime, _ = e.DateTime()
 	}
 	if extension == ".mov" {
 		const epochAdjust = 2082844800

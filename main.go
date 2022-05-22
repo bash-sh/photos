@@ -16,7 +16,7 @@ func main() {
 	}
 	app := &cli.App{
 		Name:    "photos",
-		Version: "0.1.1",
+		Version: "0.1.2",
 		Usage:   "organize a photo library",
 		Action: func(c *cli.Context) error {
 			log.Fatal("Please select a command or refer to the help")
