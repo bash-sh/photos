@@ -141,7 +141,7 @@ func (lib *Library) Process() {
 			}
 			defer f.Close()
 			var newPath string = lib.OutPath + string(os.PathSeparator) + dateCreated.Format("2006") + "-" + lib.Topic + string(os.PathSeparator) + dateCreated.Format("2006_01_02-Monday")
-			var newFile string = lib.Topic + "_" + dateCreated.Format("20060102_150405") + strings.ToLower(filepath.Ext(f.Name()))
+			var newFile string = lib.Topic + "_" + dateCreated.Format("20060102_150405.000") + strings.ToLower(filepath.Ext(f.Name()))
 			log.Debug().Msgf("New File Path: %s\n", newPath+string(os.PathSeparator)+newFile)
 			os.MkdirAll(newPath, 0750)
 			n, err := os.Create(newPath + string(os.PathSeparator) + newFile)
