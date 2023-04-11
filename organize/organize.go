@@ -65,8 +65,16 @@ func getDateCreated(path string) (DateTime time.Time) {
 	}
 	defer f.Close()
 	var extension string = strings.ToLower(filepath.Ext(f.Name()))
-	if extension == ".jpg" || extension == ".heic" || extension == ".png" {
+	if extension == ".jpg" || extension == ".heic" {
 		e, err := imagemeta.Decode(f)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Cannot extract metadata from image")
+		} else {
+			log.Debug().Str("exif", e.String()).Msg("Metadata extracted from image")
+			DateTime = e.CreateDate()
+		}
+	} else if extension == ".png" {
+		e, err := imagemeta.DecodePng(f)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Cannot extract metadata from image")
 		} else {
