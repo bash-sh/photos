@@ -1,14 +1,18 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	org "github.com/bash-sh/photos/organize"
 	cli "github.com/urfave/cli/v2"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	cli.VersionFlag = &cli.BoolFlag{
 		Name:    "version",
 		Aliases: []string{"v"},
@@ -16,10 +20,17 @@ func main() {
 	}
 	app := &cli.App{
 		Name:    "photos",
-		Version: "0.1.2",
+		Version: "0.2.0",
 		Usage:   "organize a photo library",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "toggle debug logging",
+			},
+		},
 		Action: func(c *cli.Context) error {
-			log.Fatal("Please select a command or refer to the help")
+			log.Fatal().Msg("Please select a command or refer to the help")
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -45,6 +56,9 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
+					if c.Bool("debug") {
+						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
 					lib := new(org.Library)
 					if c.NumFlags() == 6 {
 						lib.InPath = c.String("InPath")
@@ -62,6 +76,6 @@ func main() {
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("App cannot be run")
 	}
 }
