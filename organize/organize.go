@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/evanoberholster/imagemeta"
 	"github.com/rs/zerolog/log"
@@ -19,7 +20,7 @@ type Library struct {
 	InPath  string
 	OutPath string
 	Topic   string
-	CountProcessed int64
+	CountProcessed int
 }
 
 // Init variables
@@ -64,10 +65,13 @@ func getDateCreated(path string) (DateTime time.Time) {
 	}
 	defer f.Close()
 	var extension string = strings.ToLower(filepath.Ext(f.Name()))
-	if extension == ".jpg" || extension == ".heic" {
+	if extension == ".jpg" || extension == ".heic" || extension == ".png" {
 		e, err := imagemeta.Decode(f)
 		if err != nil {
-			DateTime = e.DateTimeOriginal()
+			log.Fatal().Err(err).Msg("Cannot extract metadata from image")
+		} else {
+			log.Debug().Str("exif", e.String()).Msg("Metadata extracted from image")
+			DateTime = e.CreateDate()
 		}
 	} else if extension == ".mov" {
 		const epochAdjust = 2082844800
@@ -146,5 +150,5 @@ func (lib *Library) Process() {
 		}
 		return nil
 	})
-	log.Info().Msgf("Library processed %s files", lib.CountProcessed)
+	log.Info().Msgf("Processed %s files in library", strconv.Itoa(lib.CountProcessed))
 }
