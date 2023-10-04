@@ -3,13 +3,16 @@ package organize
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/evanoberholster/imagemeta"
 	"github.com/rs/zerolog/log"
@@ -17,9 +20,9 @@ import (
 
 // Library object
 type Library struct {
-	InPath  string
-	OutPath string
-	Topic   string
+	InPath         string
+	OutPath        string
+	Topic          string
 	CountProcessed int
 }
 
@@ -124,6 +127,15 @@ func getDateCreated(path string) (DateTime time.Time) {
 	return
 }
 
+// Validate if a file already exists
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 // Process library
 func (lib *Library) Process() {
 	log.Info().Msg("Processing library")
@@ -142,6 +154,9 @@ func (lib *Library) Process() {
 			defer f.Close()
 			var newPath string = lib.OutPath + string(os.PathSeparator) + dateCreated.Format("2006") + "-" + lib.Topic + string(os.PathSeparator) + dateCreated.Format("2006_01_02-Monday")
 			var newFile string = lib.Topic + "_" + dateCreated.Format("20060102_150405.000") + strings.ToLower(filepath.Ext(f.Name()))
+			for fileExists(newPath + string(os.PathSeparator) + newFile) {
+				newFile = lib.Topic + "_" + dateCreated.Format("20060102_150405.000") + "_" + strconv.Itoa(rand.Int()) + strings.ToLower(filepath.Ext(f.Name()))
+			}
 			log.Debug().Msgf("New File Path: %s\n", newPath+string(os.PathSeparator)+newFile)
 			os.MkdirAll(newPath, 0750)
 			n, err := os.Create(newPath + string(os.PathSeparator) + newFile)
