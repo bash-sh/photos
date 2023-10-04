@@ -122,7 +122,7 @@ func getDateCreated(path string) (DateTime time.Time) {
 			log.Debug().Msg("expected to find 'mvhd' header, didn't")
 		}
 	} else {
-		log.Fatal().Msgf("File extension not supported: %s", extension)
+		log.Info().Msgf("File extension not supported: %s", extension)
 	}
 	return
 }
