@@ -4,9 +4,9 @@ import (
 	"os"
 
 	org "github.com/bash-sh/photos/organize"
-	cli "github.com/urfave/cli/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	cli "github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	}
 	app := &cli.App{
 		Name:    "photos",
-		Version: "0.2.0",
+		Version: "0.2.1",
 		Usage:   "organize a photo library",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
